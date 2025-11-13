@@ -17,28 +17,37 @@ def set_auth_cookies(
     refresh_token: Optional[str],
     settings: Settings,
 ) -> None:
-    response.set_cookie(
-        key=settings.jwt_cookie_name,
-        value=access_token,
+    cookie_kwargs = dict(
         httponly=True,
         max_age=COOKIE_MAX_AGE,
-        samesite="lax",
-        secure=False,
+        samesite="none",   # 👈 clave para cross-site
+        secure=True,       # 👈 obligatorio con SameSite=None (y Render es HTTPS)
+        path="/",
     )
+
+    response.set_cookie(
+        key=settings.jwt_cookie_name,         # sb-access-token
+        value=access_token,
+        **cookie_kwargs,
+    )
+
     if refresh_token:
         response.set_cookie(
-            key=settings.refresh_cookie_name,
+            key=settings.refresh_cookie_name, # sb-refresh-token
             value=refresh_token,
-            httponly=True,
-            max_age=COOKIE_MAX_AGE,
-            samesite="lax",
-            secure=False,
+            **cookie_kwargs,
         )
 
 
 def clear_auth_cookies(response: Response, settings: Settings) -> None:
-    response.delete_cookie(settings.jwt_cookie_name)
-    response.delete_cookie(settings.refresh_cookie_name)
+    cookie_kwargs = dict(
+        httponly=True,
+        samesite="none",
+        secure=True,
+        path="/",
+    )
+    response.delete_cookie(settings.jwt_cookie_name, **cookie_kwargs)
+    response.delete_cookie(settings.refresh_cookie_name, **cookie_kwargs)
 
 
 class AuthContext:
@@ -46,7 +55,10 @@ class AuthContext:
         self.access_token = access_token
 
 
-async def get_auth_context(request: Request, settings: Settings = Depends(get_settings)) -> AuthContext:
+async def get_auth_context(
+    request: Request,
+    settings: Settings = Depends(get_settings),
+) -> AuthContext:
     token = request.cookies.get(settings.jwt_cookie_name)
     if not token:
         raise AppError("Authentication required", code="unauthorized", status_code=401)
