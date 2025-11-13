@@ -1,0 +1,49 @@
+[tool.poetry]
+name = "backend-bff"
+version = "0.1.0"
+description = "FastAPI BFF for Flutter app integrating with Supabase"
+authors = ["App Team <dev@example.com>"]
+readme = "README.md"
+package-mode = false
+
+[tool.poetry.dependencies]
+python = "^3.11"
+fastapi = "^0.110.0"
+uvicorn = { extras = ["standard"], version = "^0.27.0" }
+httpx = "^0.27.0"
+python-dotenv = "^1.0.1"
+pydantic-settings = "^2.2.1"
+slowapi = "^0.1.8"
+starlette = "^0.36.0"
+
+[tool.poetry.group.dev.dependencies]
+pytest = "^8.1.1"
+pytest-asyncio = "^0.23.5"
+respx = "^0.20.2"
+httpx = "^0.27.0"
+ruff = "^0.3.4"
+black = "^24.3.0"
+coverage = "^7.4.3"
+
+[build-system]
+requires = ["poetry-core>=1.6.1"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+addopts = "--cov=app --cov-report=term-missing"
+
+[tool.coverage.run]
+branch = true
+source = ["app"]
+
+[tool.coverage.report]
+omit = ["app/main.py"]
+fail_under = 80
+
+[tool.ruff]
+line-length = 100
+
+[tool.black]
+line-length = 100
+

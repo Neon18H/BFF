@@ -1,0 +1,40 @@
+name: CI
+
+on:
+  push:
+    paths:
+      - 'backend-bff/**'
+  pull_request:
+    paths:
+      - 'backend-bff/**'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend-bff
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install Poetry
+        run: |
+          pip install poetry==1.7.1
+          poetry config virtualenvs.create false
+      - name: Install dependencies
+        run: poetry install --no-interaction --no-ansi
+      - name: Lint (ruff)
+        run: poetry run ruff check app
+      - name: Format check (black)
+        run: poetry run black --check app
+      - name: Verify schema
+        run: poetry run python tools/verify_schema.py
+      - name: Tests
+        env:
+          PYTHONPATH: app
+        run: poetry run pytest
+      - name: Docker build
+        run: docker build -t backend-bff .
